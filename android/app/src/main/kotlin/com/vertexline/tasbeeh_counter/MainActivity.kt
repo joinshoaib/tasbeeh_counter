@@ -1,4 +1,4 @@
-package com.example.tasbeeh_counter
+package com.vertexline.tasbeeh_counter
 
 import io.flutter.embedding.android.FlutterActivity
 

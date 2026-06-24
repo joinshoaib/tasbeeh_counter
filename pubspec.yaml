@@ -1,5 +1,5 @@
 name: tasbeeh_counter
-description: "A new Flutter project."
+description: "A beautiful digital tasbeeh counter for daily dhikr. Track SubhanAllah, Alhamdulillah, Allahu Akbar and more with vibration feedback, progress tracking, and dark mode."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -36,6 +36,7 @@ dependencies:
   google_fonts: ^6.1.0
   intl: ^0.19.0
   flutter_animate: ^4.5.0
+  rename_app: ^1.6.6
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -45,6 +46,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  change_app_package_name: ^1.4.0
   flutter_launcher_icons: ^0.14.4
   
 flutter_launcher_icons:
