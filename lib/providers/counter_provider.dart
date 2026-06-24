@@ -5,6 +5,7 @@ import 'package:vibration/vibration.dart';
 import '../models/dhikr_model.dart';
 import '../models/stats_model.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 class CounterProvider extends ChangeNotifier {
   int _count = 0;
@@ -42,7 +43,8 @@ class CounterProvider extends ChangeNotifier {
     _soundEnabled = prefs.getBool('soundEnabled') ?? false;
 
     final dhikrIndex = prefs.getInt('currentDhikrIndex') ?? 0;
-    _currentDhikr = defaultDhikrs[dhikrIndex.clamp(0, defaultDhikrs.length - 1)];
+    _currentDhikr =
+        defaultDhikrs[dhikrIndex.clamp(0, defaultDhikrs.length - 1)];
 
     final statsJson = prefs.getString('stats');
     if (statsJson != null) {
@@ -60,8 +62,14 @@ class CounterProvider extends ChangeNotifier {
     await prefs.setInt('totalCount', _totalCount);
     await prefs.setBool('vibrationEnabled', _vibrationEnabled);
     await prefs.setBool('soundEnabled', _soundEnabled);
-    await prefs.setInt('currentDhikrIndex', defaultDhikrs.indexOf(_currentDhikr));
-    await prefs.setString('stats', jsonEncode(_stats.map((e) => e.toJson()).toList()));
+    await prefs.setInt(
+      'currentDhikrIndex',
+      defaultDhikrs.indexOf(_currentDhikr),
+    );
+    await prefs.setString(
+      'stats',
+      jsonEncode(_stats.map((e) => e.toJson()).toList()),
+    );
   }
 
   Future<void> increment() async {
@@ -73,14 +81,14 @@ class CounterProvider extends ChangeNotifier {
     final todayIndex = _stats.indexWhere((s) => s.date == today);
 
     if (todayIndex >= 0) {
-      final updatedCounts = Map<String, int>.from(_stats[todayIndex].dhikrCounts);
-      updatedCounts[_currentDhikr.name] = (updatedCounts[_currentDhikr.name] ?? 0) + 1;
+      final updatedCounts = Map<String, int>.from(
+        _stats[todayIndex].dhikrCounts,
+      );
+      updatedCounts[_currentDhikr.name] =
+          (updatedCounts[_currentDhikr.name] ?? 0) + 1;
       _stats[todayIndex] = DailyStats(date: today, dhikrCounts: updatedCounts);
     } else {
-      _stats.add(DailyStats(
-        date: today,
-        dhikrCounts: {_currentDhikr.name: 1},
-      ));
+      _stats.add(DailyStats(date: today, dhikrCounts: {_currentDhikr.name: 1}));
     }
 
     // Keep only last 30 days
@@ -92,6 +100,10 @@ class CounterProvider extends ChangeNotifier {
       if (await Vibration.hasVibrator() ?? false) {
         Vibration.vibrate(duration: 30);
       }
+    }
+
+    if (_soundEnabled) {
+      SystemSound.play(SystemSoundType.click);
     }
 
     await _saveData();

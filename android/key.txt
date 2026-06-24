@@ -1,0 +1,4 @@
+storePassword=shoaib123
+keyPassword=shoaib123
+keyAlias=upload
+storeFile=C:\\Users\\NBC\\upload-keystore.jks
