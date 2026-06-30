@@ -3,9 +3,12 @@ import 'package:provider/provider.dart';
 import 'providers/counter_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/home_screen.dart';
+import 'widgets/single_counter_widget.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await SingleCounterWidget.init();
 
   final counterProvider = CounterProvider();
   final themeProvider = ThemeProvider();

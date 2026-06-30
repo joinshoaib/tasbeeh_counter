@@ -6,6 +6,7 @@ import '../models/dhikr_model.dart';
 import '../models/stats_model.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import '../widgets/single_counter_widget.dart';
 
 class CounterProvider extends ChangeNotifier {
   int _count = 0;
@@ -69,6 +70,13 @@ class CounterProvider extends ChangeNotifier {
     await prefs.setString(
       'stats',
       jsonEncode(_stats.map((e) => e.toJson()).toList()),
+    );
+
+    await SingleCounterWidget.update(
+      dhikrName: _currentDhikr.name,
+      count: _count,
+      target: _target,
+      arabicName: _currentDhikr.arabic,
     );
   }
 
