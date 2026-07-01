@@ -12,9 +12,7 @@ class SettingsScreen extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -25,12 +23,16 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 SwitchListTile(
                   secondary: Icon(
-                    themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                    themeProvider.isDarkMode
+                        ? Icons.dark_mode
+                        : Icons.light_mode,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   title: const Text('Dark Mode'),
                   subtitle: Text(
-                    themeProvider.isDarkMode ? 'Currently dark' : 'Currently light',
+                    themeProvider.isDarkMode
+                        ? 'Currently dark'
+                        : 'Currently light',
                   ),
                   value: themeProvider.isDarkMode,
                   onChanged: (_) => themeProvider.toggleTheme(),
@@ -77,6 +79,23 @@ class SettingsScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          // Daily Goal Section
+          _buildSectionTitle(context, 'Daily Goal'),
+          Card(
+            child: ListTile(
+              leading: Icon(
+                Icons.flag,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: const Text('Daily Goal'),
+              subtitle: Text('${counterProvider.dailyGoal} dhikr per day'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showDailyGoalDialog(context, counterProvider),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // Data Section
           _buildSectionTitle(context, 'Data'),
           Card(
@@ -85,7 +104,7 @@ class SettingsScreen extends StatelessWidget {
                 ListTile(
                   leading: Icon(
                     Icons.delete_forever,
-                    color: Colors.red.withOpacity(0.8),
+                    color: Colors.red.withValues(alpha: 0.8),
                   ),
                   title: const Text(
                     'Clear All Data',
@@ -138,10 +157,10 @@ class SettingsScreen extends StatelessWidget {
           Card(
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('Tasbeeh Counter'),
-                  subtitle: const Text('Version 1.0.0'),
+                const ListTile(
+                  leading: Icon(Icons.info_outline),
+                  title: Text('Tasbeeh Counter'),
+                  subtitle: Text('Version 1.0.0'),
                 ),
                 const Divider(height: 1),
                 const ListTile(
@@ -170,6 +189,48 @@ class SettingsScreen extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
           letterSpacing: 0.5,
         ),
+      ),
+    );
+  }
+
+  // Pass counterProvider as parameter
+  void _showDailyGoalDialog(
+    BuildContext context,
+    CounterProvider counterProvider,
+  ) {
+    final controller = TextEditingController(
+      text: counterProvider.dailyGoal.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Daily Goal'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Enter daily goal',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final value = int.tryParse(controller.text);
+              if (value != null && value > 0) {
+                counterProvider.setDailyGoal(value);
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Set'),
+          ),
+        ],
       ),
     );
   }

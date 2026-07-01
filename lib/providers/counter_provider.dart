@@ -7,11 +7,13 @@ import '../models/stats_model.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import '../widgets/single_counter_widget.dart';
+import '../widgets/daily_stats_widget.dart';
 
 class CounterProvider extends ChangeNotifier {
   int _count = 0;
   int _target = 33;
   int _totalCount = 0;
+  int _dailyGoal = 100;
   bool _vibrationEnabled = true;
   bool _soundEnabled = false;
   DhikrModel _currentDhikr = defaultDhikrs[0];
@@ -20,6 +22,7 @@ class CounterProvider extends ChangeNotifier {
   int get count => _count;
   int get target => _target;
   int get totalCount => _totalCount;
+  int get dailyGoal => _dailyGoal;
   bool get vibrationEnabled => _vibrationEnabled;
   bool get soundEnabled => _soundEnabled;
   DhikrModel get currentDhikr => _currentDhikr;
@@ -40,6 +43,7 @@ class CounterProvider extends ChangeNotifier {
     _count = prefs.getInt('count') ?? 0;
     _target = prefs.getInt('target') ?? 33;
     _totalCount = prefs.getInt('totalCount') ?? 0;
+    _dailyGoal = prefs.getInt('dailyGoal') ?? 100;
     _vibrationEnabled = prefs.getBool('vibrationEnabled') ?? true;
     _soundEnabled = prefs.getBool('soundEnabled') ?? false;
 
@@ -61,6 +65,7 @@ class CounterProvider extends ChangeNotifier {
     await prefs.setInt('count', _count);
     await prefs.setInt('target', _target);
     await prefs.setInt('totalCount', _totalCount);
+    await prefs.setInt('dailyGoal', _dailyGoal); // <-- ADD THIS
     await prefs.setBool('vibrationEnabled', _vibrationEnabled);
     await prefs.setBool('soundEnabled', _soundEnabled);
     await prefs.setInt(
@@ -77,6 +82,12 @@ class CounterProvider extends ChangeNotifier {
       count: _count,
       target: _target,
       arabicName: _currentDhikr.arabic,
+    );
+
+    // In increment(), after _saveData():
+    await DailyStatsWidget.update(
+      todayCount: todayCount,
+      dailyGoal: _dailyGoal,
     );
   }
 
@@ -115,6 +126,13 @@ class CounterProvider extends ChangeNotifier {
     }
 
     await _saveData();
+
+    // Update daily stats widget
+    await DailyStatsWidget.update(
+      todayCount: todayCount,
+      dailyGoal: _dailyGoal,
+    );
+
     notifyListeners();
   }
 
@@ -155,6 +173,19 @@ class CounterProvider extends ChangeNotifier {
     _totalCount = 0;
     _stats = [];
     await _saveData();
+    notifyListeners();
+  }
+
+  Future<void> setDailyGoal(int newGoal) async {
+    _dailyGoal = newGoal;
+    await _saveData();
+
+    // Update widget with new goal
+    await DailyStatsWidget.update(
+      todayCount: todayCount,
+      dailyGoal: _dailyGoal,
+    );
+
     notifyListeners();
   }
 }
