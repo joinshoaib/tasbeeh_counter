@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tasbeeh_counter/utils/sound_service.dart';
 import 'package:vibration/vibration.dart';
 import '../models/dhikr_model.dart';
 import '../models/stats_model.dart';
@@ -122,7 +123,8 @@ class CounterProvider extends ChangeNotifier {
     }
 
     if (_soundEnabled) {
-      SystemSound.play(SystemSoundType.click);
+      //SystemSound.play(SystemSoundType.click);
+      SoundService.playClick();
     }
 
     await _saveData();
