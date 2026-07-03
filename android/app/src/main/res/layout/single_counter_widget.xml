@@ -6,15 +6,15 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@drawable/widget_card_bg"
-    android:padding="16dp">
+    android:background="@drawable/widget_single_bg"
+    android:padding="12dp">
 
     <TextView
         android:id="@+id/tv_dhikr_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="SubhanAllah"
-        android:textSize="15sp"
+        android:textSize="18sp"
         android:textColor="#6B8E6B"
         android:fontFamily="sans-serif-medium"
         android:maxLines="1"
@@ -25,18 +25,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="0"
-        android:textSize="40sp"
+        android:textSize="32sp"
         android:textColor="#2D3436"
         android:fontFamily="sans-serif"
-        android:layout_marginTop="4dp" />
+        android:layout_marginTop="2dp" />
 
     <TextView
         android:id="@+id/tv_target"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="/ 33"
-        android:textSize="14sp"
+        android:textSize="18sp"
         android:textColor="#888888"
-        android:layout_marginTop="2dp" />
+        android:layout_marginTop="1dp" />
 
 </LinearLayout>
