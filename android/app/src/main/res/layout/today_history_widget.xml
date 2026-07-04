@@ -112,9 +112,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="+2 more"
-        android:textSize="10sp"
+        android:textSize="14sp"
         android:textColor="#888888"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="5dp"
         android:visibility="gone" />
 
 </LinearLayout>
