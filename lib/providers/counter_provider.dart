@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import '../widgets/single_counter_widget.dart';
 import '../widgets/daily_stats_widget.dart';
+import '../widgets/today_history_widget.dart';
 
 class CounterProvider extends ChangeNotifier {
   int _count = 0;
@@ -134,6 +135,8 @@ class CounterProvider extends ChangeNotifier {
       todayCount: todayCount,
       dailyGoal: _dailyGoal,
     );
+
+    await TodayHistoryWidget.update(todayDhikrs: _stats.last.dhikrCounts);
 
     notifyListeners();
   }
