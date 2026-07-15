@@ -26,7 +26,7 @@ class TodayHistoryWidget : HomeWidgetProvider() {
             // Get all keys from widgetData
             val allKeys = widgetData.all.keys
 
-            // Filter dhikr count keys (format: "dhikr_Name")
+            // Filter dhikr count keys
             val dhikrEntries = allKeys
                 .filter { it.startsWith("dhikr_") }
                 .mapNotNull { key ->
@@ -38,7 +38,7 @@ class TodayHistoryWidget : HomeWidgetProvider() {
                     // Only include if count > 0
                     if (count != "0") Triple(name, count, target) else null
                 }
-                .sortedByDescending { it.second.toIntOrNull() ?: 0 } // Sort by count descending
+                .sortedByDescending { it.second.toIntOrNull() ?: 0 }
 
             // Show up to 3 dhikrs
             val displayDhikrs = dhikrEntries.take(3)
@@ -59,7 +59,7 @@ class TodayHistoryWidget : HomeWidgetProvider() {
                 }
             }
 
-            // Show "more" indicator if more than 3
+            // Show "more" indicator
             val moreCount = dhikrEntries.size - 3
             if (moreCount > 0) {
                 views.setTextViewText(R.id.tv_more, "+$moreCount more")

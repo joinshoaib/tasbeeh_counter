@@ -1,4 +1,5 @@
 import 'package:home_widget/home_widget.dart';
+import '../models/stats_model.dart';
 
 class TodayHistoryWidget {
   static const String appGroupId = 'group.tasbeeh.counter';
@@ -9,15 +10,31 @@ class TodayHistoryWidget {
     await HomeWidget.setAppGroupId(appGroupId);
   }
 
-  static Future<void> update({required Map<String, int> todayDhikrs}) async {
-    // Save each dhikr count as separate key
-    todayDhikrs.forEach((name, count) {
-      HomeWidget.saveWidgetData('dhikr_$name', count.toString());
+  // Pass today's stats directly from _stats list
+  static Future<void> update({
+    required DailyStats? todayStats,
+    required Map<String, int> dhikrTargets,
+  }) async {
+    // Clear old data first
+    await HomeWidget.saveWidgetData('dhikr_count', '0');
+
+    if (todayStats != null) {
+      // Save each dhikr from today's stats
+      todayStats.dhikrCounts.forEach((name, count) {
+        HomeWidget.saveWidgetData('dhikr_$name', count.toString());
+      });
+    }
+
+    // Save targets
+    dhikrTargets.forEach((name, target) {
+      HomeWidget.saveWidgetData('target_$name', target.toString());
     });
 
-    // Save total dhikr count
-    HomeWidget.saveWidgetData('history_count', todayDhikrs.length.toString());
+    await HomeWidget.updateWidget(name: androidName, iOSName: iOSName);
+  }
 
+  static Future<void> clear() async {
+    await HomeWidget.saveWidgetData('dhikr_count', '0');
     await HomeWidget.updateWidget(name: androidName, iOSName: iOSName);
   }
 }

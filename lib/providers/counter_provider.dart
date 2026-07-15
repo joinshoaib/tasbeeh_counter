@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import '../widgets/single_counter_widget.dart';
 import '../widgets/daily_stats_widget.dart';
 import '../widgets/today_history_widget.dart';
+import '../services/notification_service.dart';
 
 class CounterProvider extends ChangeNotifier {
   int _count = 0;
@@ -18,6 +19,7 @@ class CounterProvider extends ChangeNotifier {
   int _dailyGoal = 100;
   bool _vibrationEnabled = true;
   bool _soundEnabled = false;
+  bool _notificationsEnabled = true;
   DhikrModel _currentDhikr = defaultDhikrs[0];
   List<DailyStats> _stats = [];
 
@@ -29,6 +31,9 @@ class CounterProvider extends ChangeNotifier {
   bool get soundEnabled => _soundEnabled;
   DhikrModel get currentDhikr => _currentDhikr;
   List<DailyStats> get stats => _stats;
+
+  bool get notificationsEnabled => _notificationsEnabled;
+  //
 
   double get progress => _target > 0 ? _count / _target : 0;
   bool get isCompleted => _count >= _target && _target > 0;
@@ -48,6 +53,7 @@ class CounterProvider extends ChangeNotifier {
     _dailyGoal = prefs.getInt('dailyGoal') ?? 100;
     _vibrationEnabled = prefs.getBool('vibrationEnabled') ?? true;
     _soundEnabled = prefs.getBool('soundEnabled') ?? false;
+    _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? false;
 
     final dhikrIndex = prefs.getInt('currentDhikrIndex') ?? 0;
     _currentDhikr =
@@ -70,6 +76,7 @@ class CounterProvider extends ChangeNotifier {
     await prefs.setInt('dailyGoal', _dailyGoal); // <-- ADD THIS
     await prefs.setBool('vibrationEnabled', _vibrationEnabled);
     await prefs.setBool('soundEnabled', _soundEnabled);
+    await prefs.setBool('notificationsEnabled', _notificationsEnabled);
     await prefs.setInt(
       'currentDhikrIndex',
       defaultDhikrs.indexOf(_currentDhikr),
@@ -136,7 +143,27 @@ class CounterProvider extends ChangeNotifier {
       dailyGoal: _dailyGoal,
     );
 
-    await TodayHistoryWidget.update(todayDhikrs: _stats.last.dhikrCounts);
+    // In increment(), after _saveData():
+    //final today1 = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final todayStats = _stats.where((s) => s.date == today).toList();
+    final currentTodayStats = todayStats.isNotEmpty ? todayStats.first : null;
+
+    final targets = <String, int>{};
+    for (final dhikr in defaultDhikrs) {
+      targets[dhikr.name] = dhikr.defaultTarget;
+    }
+
+    await TodayHistoryWidget.update(
+      todayStats: currentTodayStats,
+      dhikrTargets: targets,
+    );
+
+    if (_count == _target) {
+      await NotificationService.showNotification(
+        title: 'Mashallah! 🎉',
+        body: '${_currentDhikr.name} $_count/$_target completed',
+      );
+    }
 
     notifyListeners();
   }
@@ -177,6 +204,13 @@ class CounterProvider extends ChangeNotifier {
     _count = 0;
     _totalCount = 0;
     _stats = [];
+    TodayHistoryWidget.clear();
+    await _saveData();
+    notifyListeners();
+  }
+
+  Future<void> setNotificationsEnabled(bool value) async {
+    _notificationsEnabled = value;
     await _saveData();
     notifyListeners();
   }

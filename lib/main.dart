@@ -6,6 +6,7 @@ import 'screens/home_screen.dart';
 import 'widgets/single_counter_widget.dart';
 import 'widgets/daily_stats_widget.dart';
 import 'utils/sound_service.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,8 @@ void main() async {
   await SingleCounterWidget.init();
   await DailyStatsWidget.init();
   await SoundService.init();
+
+  await NotificationService.init();
 
   final counterProvider = CounterProvider();
   final themeProvider = ThemeProvider();

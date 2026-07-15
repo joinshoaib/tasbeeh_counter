@@ -2,6 +2,52 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/counter_provider.dart';
 import '../providers/theme_provider.dart';
+import '../services/notification_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+Future<void> _scheduleAndEnable(
+  BuildContext context,
+  CounterProvider provider,
+) async {
+  await NotificationService.scheduleDailyReminder(
+    hour: 16,
+    minute: 21,
+    title: 'Start your day with dhikr ☀️',
+    body: 'SubhanAllah, Alhamdulillah, Allahu Akbar',
+  );
+  await provider.setNotificationsEnabled(true);
+
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Daily reminder set for 4:21 PM')),
+    );
+  }
+}
+
+void _showOpenSettingsDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Permission Required'),
+      content: const Text(
+        'Notification permission was permanently denied. Please enable it in your device settings.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            openAppSettings(); // From permission_handler
+            Navigator.pop(context);
+          },
+          child: const Text('Open Settings'),
+        ),
+      ],
+    ),
+  );
+}
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -73,6 +119,85 @@ class SettingsScreen extends StatelessWidget {
                   value: counterProvider.soundEnabled,
                   onChanged: (_) => counterProvider.toggleSound(),
                 ),
+
+                // Notifications Section
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+          _buildSectionTitle(context, 'Notifications'),
+          Card(
+            child: Column(
+              children: [
+                SwitchListTile(
+                  secondary: Icon(
+                    Icons.notifications,
+                    color: counterProvider.notificationsEnabled
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey,
+                  ),
+                  title: const Text('Daily Reminders'),
+                  subtitle: Text(
+                    counterProvider.notificationsEnabled
+                        ? 'Daily at 5:30 AM'
+                        : 'Get notified for dhikr',
+                  ),
+                  value: counterProvider.notificationsEnabled,
+                  onChanged: (value) async {
+                    if (value) {
+                      // Check current permission status first
+                      final status = await Permission.notification.status;
+
+                      if (status.isGranted) {
+                        // Already granted, schedule directly
+                        await _scheduleAndEnable(context, counterProvider);
+                      } else if (status.isDenied) {
+                        // Request permission
+                        final result = await Permission.notification.request();
+
+                        if (result.isGranted) {
+                          await _scheduleAndEnable(context, counterProvider);
+                        } else {
+                          // Permission denied — show message and DON'T toggle
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Notification permission required. Enable in app settings.',
+                                ),
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                          // Do NOT call setNotificationsEnabled(true)
+                        }
+                      } else if (status.isPermanentlyDenied) {
+                        // User checked "Don't ask again" — open app settings
+                        if (context.mounted) {
+                          _showOpenSettingsDialog(context);
+                        }
+                      }
+                    } else {
+                      // Turn off — cancel reminders
+                      await NotificationService.cancelDailyReminder();
+                      await counterProvider.setNotificationsEnabled(false);
+                    }
+                  },
+                ),
+
+                /*
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.access_time),
+                  title: const Text('Reminder Time'),
+                  subtitle: const Text('5:30 AM'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    // TODO: Show time picker
+                  },
+                ),
+                */
               ],
             ),
           ),
