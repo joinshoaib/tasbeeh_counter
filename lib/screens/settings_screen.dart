@@ -5,13 +5,78 @@ import '../providers/theme_provider.dart';
 import '../services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+Future<void> _showTimePicker(
+  BuildContext context,
+  CounterProvider provider,
+) async {
+  final TimeOfDay? picked = await showTimePicker(
+    context: context,
+    initialTime: TimeOfDay(
+      hour: provider.reminderHour,
+      minute: provider.reminderMinute,
+    ),
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          timePickerTheme: TimePickerThemeData(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            hourMinuteColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.1),
+            hourMinuteTextColor: Theme.of(context).colorScheme.onSurface,
+            dialHandColor: Theme.of(context).colorScheme.primary,
+            dialBackgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.1),
+            entryModeIconColor: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+
+  if (picked != null) {
+    // Save new time
+    await provider.setReminderTime(picked.hour, picked.minute);
+
+    // Reschedule if enabled
+    if (provider.notificationsEnabled) {
+      await NotificationService.cancelDailyReminder();
+      await NotificationService.scheduleDailyReminder(
+        hour: picked.hour,
+        minute: picked.minute,
+        title: 'Start your day with dhikr ☀️',
+        body: 'SubhanAllah, Alhamdulillah, Allahu Akbar',
+      );
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Reminder time updated to ${_formatTime(picked.hour, picked.minute)}',
+          ),
+        ),
+      );
+    }
+  }
+}
+
+String _formatTime(int hour, int minute) {
+  final period = hour >= 12 ? 'PM' : 'AM';
+  final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+  final displayMinute = minute.toString().padLeft(2, '0');
+  return '$displayHour:$displayMinute $period';
+}
+
 Future<void> _scheduleAndEnable(
   BuildContext context,
   CounterProvider provider,
 ) async {
   await NotificationService.scheduleDailyReminder(
     hour: 16,
-    minute: 21,
+    minute: 28,
     title: 'Start your day with dhikr ☀️',
     body: 'SubhanAllah, Alhamdulillah, Allahu Akbar',
   );
@@ -19,7 +84,11 @@ Future<void> _scheduleAndEnable(
 
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Daily reminder set for 4:21 PM')),
+      SnackBar(
+        content: Text(
+          'Daily reminder set for ${_formatTime(provider.reminderHour, provider.reminderMinute)}',
+        ),
+      ),
     );
   }
 }
@@ -140,7 +209,7 @@ class SettingsScreen extends StatelessWidget {
                   title: const Text('Daily Reminders'),
                   subtitle: Text(
                     counterProvider.notificationsEnabled
-                        ? 'Daily at 5:30 AM'
+                        ? 'Daily at ${_formatTime(counterProvider.reminderHour, counterProvider.reminderMinute)}'
                         : 'Get notified for dhikr',
                   ),
                   value: counterProvider.notificationsEnabled,
@@ -186,18 +255,22 @@ class SettingsScreen extends StatelessWidget {
                   },
                 ),
 
-                /*
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.access_time),
                   title: const Text('Reminder Time'),
-                  subtitle: const Text('5:30 AM'),
+                  subtitle: Text(
+                    _formatTime(
+                      counterProvider.reminderHour,
+                      counterProvider.reminderMinute,
+                    ),
+                  ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
+                    _showTimePicker(context, counterProvider);
                     // TODO: Show time picker
                   },
                 ),
-                */
               ],
             ),
           ),

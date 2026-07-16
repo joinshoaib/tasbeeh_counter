@@ -31,7 +31,7 @@ class NotificationService {
   }) async {
     // ✅ FIX: zonedSchedule() now uses named parameters
     await _notifications.zonedSchedule(
-      id: 0,
+      id: 1,
       title: title,
       body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
@@ -80,6 +80,8 @@ class NotificationService {
 
   // Cancel only daily reminder (keep completion notifications)
   static Future<void> cancelDailyReminder() async {
+    var active = await isNotificationActive(1);
+
     await _notifications.cancel(id: 1);
   }
 
@@ -97,5 +99,12 @@ class NotificationService {
       scheduled = scheduled.add(const Duration(days: 1));
     }
     return scheduled;
+  }
+
+  static Future<bool> isNotificationActive(int id) async {
+    final List<ActiveNotification> activeNotifications = await _notifications
+        .getActiveNotifications();
+
+    return activeNotifications.any((notification) => notification.id == id);
   }
 }
