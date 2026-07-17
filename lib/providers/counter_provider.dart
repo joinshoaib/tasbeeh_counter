@@ -6,10 +6,8 @@ import 'package:vibration/vibration.dart';
 import '../models/dhikr_model.dart';
 import '../models/stats_model.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart';
 import '../widgets/single_counter_widget.dart';
 import '../widgets/daily_stats_widget.dart';
-import '../widgets/today_history_widget.dart';
 import '../services/notification_service.dart';
 
 class CounterProvider extends ChangeNotifier {
@@ -156,18 +154,11 @@ class CounterProvider extends ChangeNotifier {
 
     // In increment(), after _saveData():
     //final today1 = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final todayStats = _stats.where((s) => s.date == today).toList();
-    final currentTodayStats = todayStats.isNotEmpty ? todayStats.first : null;
 
     final targets = <String, int>{};
     for (final dhikr in defaultDhikrs) {
       targets[dhikr.name] = dhikr.defaultTarget;
     }
-
-    await TodayHistoryWidget.update(
-      todayStats: currentTodayStats,
-      dhikrTargets: targets,
-    );
 
     if (_count == _target) {
       await NotificationService.showNotification(
@@ -215,7 +206,7 @@ class CounterProvider extends ChangeNotifier {
     _count = 0;
     _totalCount = 0;
     _stats = [];
-    TodayHistoryWidget.clear();
+
     await _saveData();
     notifyListeners();
   }

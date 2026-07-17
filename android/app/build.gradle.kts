@@ -27,8 +27,8 @@ android {
         applicationId = "com.vertexline.tasbeeh_counter"
         minSdk = flutter.minSdkVersion
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
     }
 
     signingConfigs {
