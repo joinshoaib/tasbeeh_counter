@@ -27,7 +27,7 @@ class SoundService {
     if (!_initialized) await init();
 
     try {
-      await _player.play(AssetSource('sound/click.mp3'));
+      await _player.play(AssetSource('assets/sound/click.mp3'));
     } catch (e) {
       //debugPrint('Sound error: $e');
     }

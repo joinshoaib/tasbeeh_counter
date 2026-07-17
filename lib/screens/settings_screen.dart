@@ -75,8 +75,8 @@ Future<void> _scheduleAndEnable(
   CounterProvider provider,
 ) async {
   await NotificationService.scheduleDailyReminder(
-    hour: 16,
-    minute: 28,
+    hour: provider.reminderHour,
+    minute: provider.reminderMinute,
     title: 'Start your day with dhikr ☀️',
     body: 'SubhanAllah, Alhamdulillah, Allahu Akbar',
   );
@@ -215,37 +215,42 @@ class SettingsScreen extends StatelessWidget {
                   value: counterProvider.notificationsEnabled,
                   onChanged: (value) async {
                     if (value) {
-                      // Check current permission status first
+                      // 1. Check standard notification permission
                       final status = await Permission.notification.status;
 
                       if (status.isGranted) {
-                        // Already granted, schedule directly
-                        await _scheduleAndEnable(context, counterProvider);
-                      } else if (status.isDenied) {
-                        // Request permission
-                        final result = await Permission.notification.request();
+                        // Request exact alarm permission (Android 13+ requirement)
+                        final exactAlarmGranted =
+                            await NotificationService.requestExactAlarmsPermission();
 
-                        if (result.isGranted) {
+                        if (exactAlarmGranted) {
                           await _scheduleAndEnable(context, counterProvider);
                         } else {
-                          // Permission denied — show message and DON'T toggle
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                  'Notification permission required. Enable in app settings.',
+                                  'Exact alarms permission is required for on-time reminders.',
                                 ),
-                                duration: Duration(seconds: 3),
                               ),
                             );
                           }
-                          // Do NOT call setNotificationsEnabled(true)
+                        }
+                      } else if (status.isDenied) {
+                        final result = await Permission.notification.request();
+
+                        if (result.isGranted) {
+                          // Request exact alarm permission after standard is granted
+                          final exactAlarmGranted =
+                              await NotificationService.requestExactAlarmsPermission();
+                          if (exactAlarmGranted) {
+                            await _scheduleAndEnable(context, counterProvider);
+                          }
+                        } else {
+                          // Handle normal permission denied...
                         }
                       } else if (status.isPermanentlyDenied) {
-                        // User checked "Don't ask again" — open app settings
-                        if (context.mounted) {
-                          _showOpenSettingsDialog(context);
-                        }
+                        _showOpenSettingsDialog(context);
                       }
                     } else {
                       // Turn off — cancel reminders

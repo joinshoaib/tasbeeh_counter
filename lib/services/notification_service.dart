@@ -6,6 +6,9 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
+  static const int _dailyReminderId = 1; // Daily reminder
+  static const int _completionId = 2;
+
   static Future<void> init() async {
     tz_data.initializeTimeZones();
 
@@ -31,7 +34,7 @@ class NotificationService {
   }) async {
     // ✅ FIX: zonedSchedule() now uses named parameters
     await _notifications.zonedSchedule(
-      id: 1,
+      id: _dailyReminderId,
       title: title,
       body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
@@ -57,7 +60,7 @@ class NotificationService {
   }) async {
     // ✅ FIX: show() now uses named parameters
     await _notifications.show(
-      id: 0,
+      id: _completionId,
       title: title,
       body: body,
       notificationDetails: const NotificationDetails(
@@ -106,5 +109,23 @@ class NotificationService {
         .getActiveNotifications();
 
     return activeNotifications.any((notification) => notification.id == id);
+  }
+
+  static Future<bool> requestExactAlarmsPermission() async {
+    // Resolve the platform-specific implementation for Android
+    final androidImplementation = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    if (androidImplementation != null) {
+      // Prompt the user for the exact alarm permission
+      final bool? hasPermission = await androidImplementation
+          .requestExactAlarmsPermission();
+      return hasPermission ?? false;
+    }
+
+    // Return true on iOS/non-Android devices as they don't require this permission
+    return true;
   }
 }
