@@ -1,6 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:flutter_timezone/flutter_timezone.dart'; // Add this package import
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
@@ -10,7 +11,20 @@ class NotificationService {
   static const int _completionId = 2;
 
   static Future<void> init() async {
+    // 1. Initialize timezone data
     tz_data.initializeTimeZones();
+
+    try {
+      // 2. Fetch the native device's current timezone string dynamically
+      final String timeZoneName =
+          (await FlutterTimezone.getLocalTimezone()).identifier;
+
+      // 3. Set timezone library default to match the device's native configuration
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+    } catch (e) {
+      // Fallback configuration if device lookup fails
+      tz.setLocalLocation(tz.getLocation('UTC'));
+    }
 
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
@@ -83,8 +97,6 @@ class NotificationService {
 
   // Cancel only daily reminder (keep completion notifications)
   static Future<void> cancelDailyReminder() async {
-    var active = await isNotificationActive(1);
-
     await _notifications.cancel(id: 1);
   }
 
