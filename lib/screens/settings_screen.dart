@@ -201,6 +201,67 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 SwitchListTile(
                   secondary: Icon(
+                    Icons.volume_up,
+                    color: counterProvider.dikhrNotificationsEnabled
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey,
+                  ),
+                  title: const Text('Dhikr Completion Alert'),
+                  subtitle: const Text(
+                    'Show instant notification when you hit your target counter goal',
+                  ),
+                  value: counterProvider.dikhrNotificationsEnabled,
+                  onChanged: (value) async {
+                    if (value) {
+                      // 1. Check standard notification permission
+                      final status = await Permission.notification.status;
+
+                      if (status.isGranted) {
+                        // Request exact alarm permission (Android 13+ requirement)
+                        final exactAlarmGranted =
+                            await NotificationService.requestExactAlarmsPermission();
+
+                        if (exactAlarmGranted) {
+                          await counterProvider
+                              .setDikhrCompletionNotificationsEnabled(true);
+                        } else {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Exact alarms permission is required for on-time reminders.',
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      } else if (status.isDenied) {
+                        final result = await Permission.notification.request();
+
+                        if (result.isGranted) {
+                          // Request exact alarm permission after standard is granted
+                          final exactAlarmGranted =
+                              await NotificationService.requestExactAlarmsPermission();
+                          if (exactAlarmGranted) {
+                            await counterProvider
+                                .setDikhrCompletionNotificationsEnabled(true);
+                          }
+                        } else {
+                          // Handle normal permission denied...
+                        }
+                      } else if (status.isPermanentlyDenied) {
+                        _showOpenSettingsDialog(context);
+                      }
+                    } else {
+                      // Turn off — cancel reminders
+                      await counterProvider
+                          .setDikhrCompletionNotificationsEnabled(false);
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  secondary: Icon(
                     Icons.notifications,
                     color: counterProvider.notificationsEnabled
                         ? Theme.of(context).colorScheme.primary

@@ -18,6 +18,7 @@ class CounterProvider extends ChangeNotifier {
   bool _vibrationEnabled = true;
   bool _soundEnabled = false;
   bool _notificationsEnabled = true;
+  bool _dikhrNotificationsEnabled = true;
   DhikrModel _currentDhikr = defaultDhikrs[0];
   List<DailyStats> _stats = [];
   int _reminderHour = 5;
@@ -33,6 +34,7 @@ class CounterProvider extends ChangeNotifier {
   List<DailyStats> get stats => _stats;
 
   bool get notificationsEnabled => _notificationsEnabled;
+  bool get dikhrNotificationsEnabled => _dikhrNotificationsEnabled;
 
   int get reminderHour => _reminderHour;
   int get reminderMinute => _reminderMinute;
@@ -58,6 +60,8 @@ class CounterProvider extends ChangeNotifier {
     _vibrationEnabled = prefs.getBool('vibrationEnabled') ?? true;
     _soundEnabled = prefs.getBool('soundEnabled') ?? false;
     _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? false;
+    _dikhrNotificationsEnabled =
+        prefs.getBool('dikhrNotificationsEnabled') ?? false;
     _reminderHour = prefs.getInt('reminderHour') ?? 5;
     _reminderMinute = prefs.getInt('reminderMinute') ?? 30;
 
@@ -83,6 +87,10 @@ class CounterProvider extends ChangeNotifier {
     await prefs.setBool('vibrationEnabled', _vibrationEnabled);
     await prefs.setBool('soundEnabled', _soundEnabled);
     await prefs.setBool('notificationsEnabled', _notificationsEnabled);
+    await prefs.setBool(
+      'dikhrNotificationsEnabled',
+      _dikhrNotificationsEnabled,
+    );
     await prefs.setInt('reminderHour', _reminderHour);
     await prefs.setInt('reminderMinute', _reminderMinute);
 
@@ -161,10 +169,12 @@ class CounterProvider extends ChangeNotifier {
     }
 
     if (_count == _target) {
-      await NotificationService.showNotification(
-        title: 'Mashallah! 🎉',
-        body: '${_currentDhikr.name} $_count/$_target completed',
-      );
+      if (_dikhrNotificationsEnabled) {
+        await NotificationService.showNotification(
+          title: 'Mashallah! 🎉',
+          body: '${_currentDhikr.name} $_count/$_target completed',
+        );
+      }
     }
 
     notifyListeners();
@@ -233,6 +243,12 @@ class CounterProvider extends ChangeNotifier {
   Future<void> setReminderTime(int hour, int minute) async {
     _reminderHour = hour;
     _reminderMinute = minute;
+    await _saveData();
+    notifyListeners();
+  }
+
+  Future<void> setDikhrCompletionNotificationsEnabled(bool value) async {
+    _dikhrNotificationsEnabled = value;
     await _saveData();
     notifyListeners();
   }
